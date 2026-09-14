@@ -1,0 +1,15 @@
+{
+    "name": "w0q/request",
+    "autoload": {
+        "psr-4": {
+            "W0q\\Request\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "faveroo",
+            "email": "gabriel290974@gmail.com"
+        }
+    ],
+    "require": {}
+}
