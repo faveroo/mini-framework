@@ -3,7 +3,9 @@
 namespace W0q\Request\Core;
 
 use ReflectionClass;
+use ReflectionFunction;
 use ReflectionMethod;
+use ReflectionParameter;
 use RuntimeException;
 
 class Container
@@ -55,33 +57,81 @@ class Container
     }
 
     public function call(
-        string $class,
-        string $method,
+        mixed $target,
+        ?string $method = null,
+        array $parameters = []
     ): mixed {
-        $instance = $this->make($class);
+        if (is_string($target)) {
+            $instance = $this->make($target);
 
-        $reflection = new ReflectionMethod(
-            $instance,
-            $method
-        );
+            $reflection = new ReflectionMethod(
+                $instance,
+                $method
+            );
+        } else {
+            $instance = null;
 
-        $dependencies = [];
+            $reflection = new ReflectionFunction(
+                $target
+            );
+        }
+
+        $arguments = [];
 
         foreach ($reflection->getParameters() as $parameter) {
+            $name = $parameter->getName();
+
+            if (array_key_exists($name, $parameters)) {
+                $value = $parameters[$name];
+
+                $arguments[] = $this->cast($parameter, $value);
+
+                continue;
+            }
+
             $type = $parameter->getType();
 
-            if ($type === null || $type->isBuiltin()) {
+            if (
+                $type === null ||
+                $type->isBuiltin()
+            ) {
                 throw new RuntimeException(
-                    "Não foi possível resolver {$parameter->getName()}"
+                    "Não foi possível resolver {$name}"
                 );
             }
 
-            $dependencies[] = $this->make($type->getName());
+            $arguments[] = $this->make(
+                $type->getName()
+            );
         }
 
         return $reflection->invokeArgs(
             $instance,
-            $dependencies
+            $arguments
         );
+    }
+
+    public function cast(
+        ReflectionParameter $parameter,
+        mixed $value
+    ): mixed {
+        $type = $parameter->getType();
+
+        if ($type === null) {
+            return $value;
+        }
+
+        if (! $type->isBuiltin()) {
+            return $value;
+        }
+
+        return match ($type->getName()) {
+            'int' => (int) $value,
+            'float' => (float) $value,
+            'bool' => (bool) $value,
+            'string' => (string) $value,
+            'array' => (array) $value,
+            default => $value,
+        };
     }
 }

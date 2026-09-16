@@ -14,10 +14,14 @@ class Request
     public static function capture(): static
     {
         return new static(
-            method: $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            method: strtoupper(
+                $_SERVER['REQUEST_METHOD'] ?? 'GET'
+            ),
             uri: $_SERVER['REQUEST_URI'] ?? '/',
             query: $_GET,
-            headers: getallheaders(),
+            headers: function_exists('getallheaders')
+                ? getallheaders()
+                : [],
         );
     }
 
@@ -41,7 +45,7 @@ class Request
         return parse_url(
             $this->uri,
             PHP_URL_PATH
-        );
+        ) ?: '/';
     }
 
     public function headers(): array
@@ -54,6 +58,7 @@ class Request
         return [
             'method' => $this->method(),
             'uri' => $this->uri(),
+            'path' => $this->path(),
             'query' => $this->query(),
             'headers' => $this->headers(),
         ];

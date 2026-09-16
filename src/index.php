@@ -17,7 +17,7 @@ $container->bind(
     
 $router = new Router($container);
 
-$router->get('/', [HomeController::class, 'index']);
+$router->get('/{id}', [HomeController::class, 'index']);
 
 $response = $router->dispatch($request);
 

@@ -9,9 +9,11 @@ class HomeController
 {
     public function index(
         Request $request,
+        int $id,
         UserService $service,
     ): array {
         return [
+            'id' => $id,
             'users' => $service->all(),
         ];
     }
