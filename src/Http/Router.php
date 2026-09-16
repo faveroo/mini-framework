@@ -2,11 +2,17 @@
 
 namespace W0q\Request\Http;
 
+use W0q\Request\Core\Container;
+
 class Router
 {
     private array $routes = [];
 
-    public function get(string $uri, callable $action): void
+    public function __construct(
+        private Container $container,
+    ) {}
+
+    public function get(string $uri, callable|array $action): void
     {
         $this->routes['GET'][$uri] = $action;
     }
@@ -14,9 +20,8 @@ class Router
     public function dispatch(Request $request): mixed
     {
         $method = $request->method();
-        $uri = parse_url($request->uri(), PHP_URL_PATH);
-
-        $action = $this->routes[$method][$uri] ?? null;
+        $path = $request->path();
+        $action = $this->routes[$method][$path] ?? null;
 
         if ($action === null) {
             http_response_code(404);
@@ -26,6 +31,11 @@ class Router
             ];
         }
 
-        return $action($request);
+        [$controller, $controllerMethod] = $action;
+
+        return $this->container->call(
+            $controller,
+            $controllerMethod
+        );
     }
 }

@@ -36,6 +36,14 @@ class Request
         return $this->query;
     }
 
+    public function path(): string
+    {
+        return parse_url(
+            $this->uri,
+            PHP_URL_PATH
+        );
+    }
+
     public function headers(): array
     {
         return $this->headers;

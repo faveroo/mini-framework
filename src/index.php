@@ -1,17 +1,23 @@
 <?php
 
+use W0q\Request\Controllers\HomeController;
+use W0q\Request\Core\Container;
 use W0q\Request\Http\Request;
 use W0q\Request\Http\Router;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $request = Request::capture();
+$container = new Container();
 
-$router = new Router();
+$container->bind(
+    Request::class,
+    fn () => $request
+    );
+    
+$router = new Router($container);
 
-$router->get('/', function(Request $request) {
-    return $request->all();
-});
+$router->get('/', [HomeController::class, 'index']);
 
 $response = $router->dispatch($request);
 
